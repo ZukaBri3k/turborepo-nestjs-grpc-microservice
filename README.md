@@ -1,135 +1,57 @@
-# Turborepo starter
+# Test Turborepo gRPC NestJS
 
-This Turborepo starter is maintained by the Turborepo core team.
+This project is a dedicated test environment for exploring and demonstrating the integration of **gRPC** with **NestJS** applications within a **Turborepo** monorepo architecture.
 
-## Using this example
+It serves as a reference for setting up microservices communication using gRPC in a modern monorepo build system.
 
-Run the following command:
+## Project Structure
 
-```sh
-npx create-turbo@latest
+- **apps/**
+    - `api-gateway`: NestJS application acting as the gateway, forwarding requests to microservices via gRPC.
+    - `ms-user`: NestJS microservice handling user domains via gRPC.
+- **packages/**
+    - `grpc`: A shared library containing `.proto` definitions and generating TypeScript interfaces/types using `ts-proto`.
+
+## Critical Setup for NestJS gRPC Apps
+
+For any NestJS application in this monorepo that needs to consume the gRPC definitions or act as a gRPC service, the following configurations are strict requirements:
+
+### 1. `package.json` Script
+
+You must add the `copy-proto-files` script to the application's `package.json`. This ensures that the raw `.proto` files are copied to the distribution folder during the build process, making them available at runtime.
+
+Add this to `scripts`:
+
+```json
+"copy-proto-files": "mkdir -p dist/proto-files && cp ../../packages/grpc/proto-files/*.proto dist/proto-files/"
 ```
 
-## What's inside?
+### 2. `nest-cli.json` Configuration
 
-This Turborepo includes the following packages/apps:
+You must configure the Nest CLI to **NOT** delete the output directory on build. This prevents the `copy-proto-files` script's work from being wiped out if it runs before the clean (though usually, it's about preserving them if run in parallel or specific build flows). More importantly, standard nest build cleans `dist` by default.
 
-### Apps and Packages
+Update `nest-cli.json`:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```json
+{
+    "compilerOptions": {
+        "deleteOutDir": false
+    }
+}
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. `turbo.json` Configuration
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+The `turbo.json` pipeline has been configured to orchestrate these tasks automatically:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- **build**: Executes the `copy-proto-files` task before running the `build` script.
+- **dev**: Executes `copy-proto-files` and `^build` (building dependencies) before starting the development environment.
 
-### Develop
+## Running the Project
 
-To develop all apps and packages, run the following command:
+(Standard Turborepo commands apply)
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+```bash
 turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
 ```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+# turborepo-nestjs-grpc-microservice
