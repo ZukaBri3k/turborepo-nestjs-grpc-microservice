@@ -54,4 +54,3 @@ The `turbo.json` pipeline has been configured to orchestrate these tasks automat
 ```bash
 turbo dev
 ```
-# turborepo-nestjs-grpc-microservice
