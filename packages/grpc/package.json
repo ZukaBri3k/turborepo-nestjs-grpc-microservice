@@ -1,0 +1,21 @@
+{
+    "name": "@kwh50/grpc",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "Kyrill Dumerchat",
+    "type": "commonjs",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "pnpx protoc --ts_proto_out=./src ./proto-files/*.proto --ts_proto_opt=nestJs=true && mv ./src/proto-files/* ./src/ && rm -rf ./src/proto-files && tsc"
+    },
+    "dependencies": {
+        "@grpc/grpc-js": "^1.14.3",
+        "@grpc/proto-loader": "^0.8.0",
+        "@nestjs/microservices": "^11.1.11",
+        "rxjs": "^7.8.1",
+        "ts-proto": "^2.10.1",
+        "typescript": "^5.9.3"
+    }
+}
